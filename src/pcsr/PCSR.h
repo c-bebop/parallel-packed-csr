@@ -1,3 +1,4 @@
+#pragma once
 /*
  * Created by Eleni Alevra on 02/06/2020.
  * modified by Christian Menges
@@ -6,13 +7,12 @@
 #include <fastLock.h>
 
 #include <atomic>
+#include <condition_variable>
+#include <mutex>
+#include <tuple>
 #include <vector>
 
 #include "hybridLock.h"
-
-using namespace std;
-#ifndef PCSR2_PCSR_H
-#define PCSR2_PCSR_H
 
 /** Types */
 typedef struct _node {
@@ -38,7 +38,7 @@ typedef struct edge_list {
   uint64_t N;
   int H;
   int logN;
-  shared_ptr<FastLock> global_lock;
+  std::shared_ptr<FastLock> global_lock;
   HybridLock **node_locks;  // locks for every PCSR leaf node
   edge_t *items;
 } edge_list_t;
@@ -67,7 +67,7 @@ class PCSR {
   edge_list_t edges;
 
   PCSR(uint32_t init_n, uint32_t, bool lock_search, int domain = 0);
-  PCSR(uint32_t init_n, vector<condition_variable *> *cvs, bool search_lock, int domain = 0);
+  PCSR(uint32_t init_n, std::vector<std::condition_variable *> *cvs, bool search_lock, int domain = 0);
   ~PCSR();
   /** Public API */
   bool edge_exists(uint32_t src, uint32_t dest);
@@ -75,7 +75,7 @@ class PCSR {
   void add_edge(uint32_t src, uint32_t dest, uint32_t value);
   void remove_edge(uint32_t src, uint32_t dest);
   void read_neighbourhood(int src);
-  vector<int> get_neighbourhood(int src) const;
+  std::vector<int> get_neighbourhood(int src) const;
 
   /**
    * Returns the node count
@@ -129,23 +129,24 @@ class PCSR {
   bool lock_bsearch = false;  // true if we lock during binary search
 
   // members used when parallel redistributing is enabled
-  bool adding_sentinels = false;              // true if we are in the middle of inserting a sentinel node
-  mutex *redistr_mutex;                       // for synchronisation with the redistributing worker threads
-  condition_variable *redistr_cv;             // for synchronisation with the redistributing worker threads
-  vector<mutex *> *redistr_locks;             // for synchronisation with the redistributing worker threads
-  vector<condition_variable *> *redistr_cvs;  // for synchronisation with the redistributing worker threads
+  bool adding_sentinels = false;                        // true if we are in the middle of inserting a sentinel node
+  std::mutex *redistr_mutex;                            // for synchronisation with the redistributing worker threads
+  std::condition_variable *redistr_cv;                  // for synchronisation with the redistributing worker threads
+  std::vector<std::mutex *> *redistr_locks;             // for synchronisation with the redistributing worker threads
+  std::vector<std::condition_variable *> *redistr_cvs;  // for synchronisation with the redistributing worker threads
 
   void redistribute(int index, int len);
   bool got_correct_insertion_index(edge_t ins_edge, uint32_t src, uint32_t index, edge_t elem, int node_index,
                                    int node_id, uint32_t &max_node);
-  pair<pair<int, int>, insertion_info_t *> acquire_insert_locks(uint32_t index, edge_t elem, uint32_t src,
-                                                                int ins_node_v, uint32_t left_node_bound, int tries);
-  pair<int, int> acquire_remove_locks(uint32_t index, edge_t elem, uint32_t src, int ins_node_v,
-                                      uint32_t left_node_bound);
-  void release_locks(pair<int, int> acquired_locks);
-  void release_locks_no_inc(pair<int, int> acquired_locks);
+  std::pair<std::pair<int, int>, insertion_info_t *> acquire_insert_locks(uint32_t index, edge_t elem, uint32_t src,
+                                                                          int ins_node_v, uint32_t left_node_bound,
+                                                                          int tries);
+  std::pair<int, int> acquire_remove_locks(uint32_t index, edge_t elem, uint32_t src, int ins_node_v,
+                                           uint32_t left_node_bound);
+  void release_locks(std::pair<int, int> acquired_locks);
+  void release_locks_no_inc(std::pair<int, int> acquired_locks);
   uint32_t find_value(uint32_t src, uint32_t dest);
-  vector<uint32_t> sparse_matrix_vector_multiplication(std::vector<uint32_t> const &v);
+  std::vector<uint32_t> sparse_matrix_vector_multiplication(std::vector<uint32_t> const &v);
   void double_list();
   void half_list();
   int slide_right(int index, uint32_t src);
@@ -156,9 +157,9 @@ class PCSR {
   uint32_t get_node_id(uint32_t node_index) const;
   void print_array();
   void print_graph(int);
-  pair<double, int> redistr_store(edge_t *space, int index, int len);
+  std::pair<double, int> redistr_store(edge_t *space, int index, int len);
   void fix_sentinel(const edge_t &sentinel, int in);
-  pair<uint32_t, int> binary_search(edge_t *elem, uint32_t start, uint32_t end, bool unlock);
+  std::pair<uint32_t, int> binary_search(edge_t *elem, uint32_t start, uint32_t end, bool unlock);
   void resizeEdgeArray(size_t newSize);
 
   /**
@@ -188,7 +189,7 @@ class PCSR {
    * Returns all stored edges
    * @return [{node_id, dest_id, edge_value}]
    */
-  vector<tuple<uint32_t, uint32_t, uint32_t>> get_edges();
+  std::vector<std::tuple<uint32_t, uint32_t, uint32_t>> get_edges();
 
   /**
    * Deletes all edges. The data structure is invalid afterwards
@@ -200,5 +201,3 @@ class PCSR {
   const bool is_numa_available;
   int domain;
 };
-
-#endif  // PCSR2_PCSR_H
