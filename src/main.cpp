@@ -168,7 +168,8 @@ int main(int argc, char *argv[]) {
   //   sort(core_graph.begin(), core_graph.end());
   switch (v) {
     case Version::PPCSR: {
-      auto thread_pool = make_unique<ThreadPool>(threads, lock_search, num_nodes + 1, partitions_per_domain);
+      // Removed partitions_per_domain: unused parameter
+      auto thread_pool = make_unique<ThreadPool>(threads, lock_search, num_nodes + 1);
       execute(threads, size, core_graph, updates, thread_pool);
       break;
     }
