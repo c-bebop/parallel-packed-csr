@@ -1,12 +1,13 @@
+#pragma once
+
 /**
  * @file PPPCSR.h
  * @author Christian Menges
  */
 
-#include "../pcsr/PCSR.h"
+#include <vector>
 
-#ifndef PPPCSR_H
-#define PPPCSR_H
+#include "../pcsr/PCSR.h"
 
 class PPPCSR {
  public:
@@ -25,7 +26,7 @@ class PPPCSR {
 
   std::size_t get_partiton(size_t vertex_id) const;
 
-  vector<int> get_neighbourhood(int src) const;
+  std::vector<int> get_neighbourhood(int src) const;
 
   /**
    * Returns the node count
@@ -58,5 +59,3 @@ class PPPCSR {
 
   int partitionsPerDomain;
 };
-
-#endif  // PPPCSR_H
