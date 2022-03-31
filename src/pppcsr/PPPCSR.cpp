@@ -9,6 +9,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <vector>
 
 PPPCSR::PPPCSR(uint32_t init_n, uint32_t src_n, bool lock_search, int numDomain, int partitionsPerDomain, bool use_numa)
     : partitionsPerDomain(partitionsPerDomain) {
@@ -37,7 +38,7 @@ bool PPPCSR::edge_exists(uint32_t src, uint32_t dest) {
   return partitions[get_partiton(src)].edge_exists(src - distribution[get_partiton(src)], dest);
 }
 
-vector<int> PPPCSR::get_neighbourhood(int src) const {
+std::vector<int> PPPCSR::get_neighbourhood(int src) const {
   return partitions[get_partiton(src)].get_neighbourhood(src - distribution[get_partiton(src)]);
 }
 
