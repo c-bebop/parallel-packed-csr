@@ -26,7 +26,7 @@ ThreadPool::ThreadPool(const int NUM_OF_THREADS, bool lock_search, uint32_t init
 // Finishes when finished is set to true and there are no outstanding tasks
 template <bool isMasterThread>
 void ThreadPool::execute(int thread_id) {
-  cout << "Thread " << thread_id << " has " << tasks[thread_id].size() << " tasks" << endl;
+  // cout << "Thread " << thread_id << " has " << tasks[thread_id].size() << " tasks" << endl;
 
   int registered = -1;
 
