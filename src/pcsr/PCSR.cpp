@@ -114,9 +114,9 @@ void PCSR::print_array() {
       if (value == UINT32_MAX) {
         value = 0;
       }
-      printf("\n%d-s(%u):(%d, %d) ", i, value, nodes[value].beginning, nodes[value].end);
+      printf("\n%ld-s(%u):(%d, %d) ", i, value, nodes[value].beginning, nodes[value].end);
     } else {
-      printf("%d-(%d, %u) ", i, edges.items[i].dest, edges.items[i].value);
+      printf("%ld-(%d, %u) ", i, edges.items[i].dest, edges.items[i].value);
     }
   }
   printf("\n\n");
