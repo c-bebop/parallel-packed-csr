@@ -22,11 +22,11 @@ class PPPCSR {
   void add_node();
   void add_edge(uint32_t src, uint32_t dest, uint32_t value);
   void remove_edge(uint32_t src, uint32_t dest);
-  void read_neighbourhood(int src);
+  void read_neighbourhood(uint32_t src);
 
   std::size_t get_partiton(size_t vertex_id) const;
 
-  std::vector<int> get_neighbourhood(int src) const;
+  std::vector<uint32_t> get_neighbourhood(uint32_t src) const;
 
   /**
    * Returns the node count

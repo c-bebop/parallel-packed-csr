@@ -74,14 +74,14 @@ class PCSR {
   void add_node();
   void add_edge(uint32_t src, uint32_t dest, uint32_t value);
   void remove_edge(uint32_t src, uint32_t dest);
-  void read_neighbourhood(int src);
-  std::vector<int> get_neighbourhood(int src) const;
+  void read_neighbourhood(uint32_t src);
+  std::vector<uint32_t> get_neighbourhood(uint32_t src) const;
 
   /**
    * Returns the node count
    * @return node count
    */
-  uint64_t get_n() const;
+  size_t get_n() const;
 
   /**
    * inserts nodes and edges at the front ot the data structure
@@ -149,7 +149,7 @@ class PCSR {
   std::vector<uint32_t> sparse_matrix_vector_multiplication(std::vector<uint32_t> const &v);
   void double_list();
   void half_list();
-  int slide_right(int index, uint32_t src);
+  int slide_right(uint32_t index, uint32_t src);
   void slide_left(int index, uint32_t src);
   void add_edge_parallel(uint32_t src, uint32_t dest, uint32_t value, int retries);
   void insert(uint32_t index, edge_t elem, uint32_t src, insertion_info_t *info);

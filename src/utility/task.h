@@ -8,10 +8,13 @@
 
 /** Struct for tasks to the threads */
 struct task {
-  bool add;    // True if this is an add task. If this is false it means it's a delete.
-  bool read;   // True if this is a read task.
-  int src;     // Source vertex for this task's edge
-  int target;  // Target vertex for this task's edge
+  bool add;   // True if this is an add task. If this is false it means it's a delete.
+  bool read;  // True if this is a read task.
+
+  // TODO: Why is src and target of type int? Are there edges with negative row/column
+  // entries?!
+  uint32_t src;     // Source vertex for this task's edge
+  uint32_t target;  // Target vertex for this task's edge
 };
 
 #endif  // PARALLEL_PACKED_CSR_TASK_H

@@ -39,7 +39,7 @@ bool PPPCSR::edge_exists(uint32_t src, uint32_t dest) {
   return partitions[get_partiton(src)].edge_exists(src - distribution[get_partiton(src)], dest);
 }
 
-std::vector<int> PPPCSR::get_neighbourhood(int src) const {
+std::vector<uint32_t> PPPCSR::get_neighbourhood(uint32_t src) const {
   return partitions[get_partiton(src)].get_neighbourhood(src - distribution[get_partiton(src)]);
 }
 
@@ -53,7 +53,7 @@ void PPPCSR::remove_edge(uint32_t src, uint32_t dest) {
   partitions[get_partiton(src)].remove_edge(src - distribution[get_partiton(src)], dest);
 }
 
-void PPPCSR::read_neighbourhood(int src) {
+void PPPCSR::read_neighbourhood(uint32_t src) {
   partitions[get_partiton(src)].read_neighbourhood(src - distribution[get_partiton(src)]);
 }
 

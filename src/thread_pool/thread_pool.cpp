@@ -60,17 +60,17 @@ void ThreadPool::execute(int thread_id) {
 }
 
 // Submit an update for edge {src, target} to thread with number thread_id
-void ThreadPool::submit_add(int thread_id, int src, int target) {
+void ThreadPool::submit_add(int thread_id, uint32_t src, uint32_t target) {
   tasks[thread_id].push(task{true, false, src, target});
 }
 
 // Submit a delete edge task for edge {src, target} to thread with number thread_id
-void ThreadPool::submit_delete(int thread_id, int src, int target) {
+void ThreadPool::submit_delete(int thread_id, uint32_t src, uint32_t target) {
   tasks[thread_id].push(task{false, false, src, target});
 }
 
 // Submit a read neighbourhood task for vertex src to thread with number thread_id
-void ThreadPool::submit_read(int thread_id, int src) { tasks[thread_id].push(task{false, true, src, src}); }
+void ThreadPool::submit_read(int thread_id, uint32_t src) { tasks[thread_id].push(task{false, true, src, src}); }
 
 // starts a new number of threads
 // number of threads is passed to the constructor

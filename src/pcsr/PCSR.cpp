@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
+#include <limits>
 #include <queue>
 #include <tuple>
 #include <vector>
@@ -82,10 +83,10 @@ void PCSR::clear() {
 }
 
 vector<tuple<uint32_t, uint32_t, uint32_t>> PCSR::get_edges() {
-  const auto n = get_n();
+  const size_t n = get_n();
   vector<tuple<uint32_t, uint32_t, uint32_t>> output;
 
-  for (uint64_t i = 0; i < n; i++) {
+  for (size_t i = 0; i < n; i++) {
     auto start = nodes[i].beginning;
     auto end = nodes[i].end;
     for (auto j = start + 1; j < end; j++) {
@@ -97,7 +98,7 @@ vector<tuple<uint32_t, uint32_t, uint32_t>> PCSR::get_edges() {
   return output;
 }
 
-uint64_t PCSR::get_n() const { return nodes.size(); }
+size_t PCSR::get_n() const { return nodes.size(); }
 
 uint64_t PCSR::get_size() {
   uint64_t size = nodes.capacity() * sizeof(node_t);
@@ -145,6 +146,9 @@ int get_depth(edge_list_t *list, int len) { return bsr_word(list->N / len); }
 
 // get parent of this node in the tree
 pair<int, int> get_parent(edge_list_t *list, int index, int len) {
+  // TODO: fix unused parameter!
+  (void)index;
+
   int parent_len = len * 2;
   int depth = get_depth(list, len);
 
@@ -220,7 +224,7 @@ void PCSR::fix_sentinel(const edge_t &sentinel, int in) {
 
 // Inplace version
 void PCSR::redistribute(int index, int len) {
-  size_t j = 0;
+  int j = 0;
   const size_t end = index + len;
 
   for (size_t i = index; i < end; i++) {
@@ -238,7 +242,7 @@ void PCSR::redistribute(int index, int len) {
   double index_d = index + static_cast<double>(j - 1) * step;
 
   // Ignore element at position index since it is already in the correct position
-  for (auto i = index + j - 1; i > index; i--) {
+  for (int i = index + j - 1; i > index; i--) {
     const size_t in = static_cast<size_t>(index_d);
 
     std::swap(edges.items[in], edges.items[i]);
@@ -273,7 +277,7 @@ void PCSR::double_list() {
     edges.items = (edge_t *)realloc(edges.items, edges.N * sizeof(*(edges.items)));
   }
 
-  for (int i = edges.N / 2; i < edges.N; i++) {
+  for (uint64_t i = edges.N / 2; i < edges.N; i++) {
     edges.items[i].value = 0;  // setting second half to null
     edges.items[i].dest = 0;   // setting second half to null
   }
@@ -286,8 +290,8 @@ void PCSR::half_list() {
   resizeEdgeArray(edges.N / 2);
   const int new_locks_size = edges.N / edges.logN;
 
-  int j = 0;
-  for (int i = 0; i < edges.N * 2; i++) {
+  uint64_t j = 0;
+  for (uint64_t i = 0; i < edges.N * 2; i++) {
     if (!is_null(edges.items[i].value)) {
       edges.items[j++] = edges.items[i];
     }
@@ -323,7 +327,7 @@ void PCSR::half_list() {
 // notice that slide right does not not null the current spot.
 // this is ok because we will be putting something in the current index
 // after sliding everything to the right.
-int PCSR::slide_right(int index, uint32_t src) {
+int PCSR::slide_right(uint32_t index, uint32_t src) {
   int rval = 0;
   edge_t el = edges.items[index];
   edges.items[index].src = -1;
@@ -577,7 +581,9 @@ void PCSR::insert(uint32_t index, edge_t elem, uint32_t src, insertion_info_t *i
   } else {
     while (density >= density_b.y) {
       len *= 2;
-      if (len <= edges.N) {
+      // TODO: with this comparison + static_cast to int we
+      // limit N <= 2.147.483.647 (max 31 bit signed integer value)
+      if (len <= static_cast<int>(edges.N)) {
         level--;
         node_index = find_node(node_index, len);
         density_b = density_bound(&edges, level);
@@ -595,6 +601,7 @@ void PCSR::insert(uint32_t index, edge_t elem, uint32_t src, insertion_info_t *i
 }
 
 void PCSR::remove(uint32_t index, const edge_t &elem, uint32_t src) {
+  (void)src;  // TODO: remove unused parameter
   auto node_index = find_leaf(&edges, index);
   auto level = edges.H;
   auto len = edges.logN;
@@ -615,7 +622,7 @@ void PCSR::remove(uint32_t index, const edge_t &elem, uint32_t src) {
   // go up to the biggest node above the density bound
   while (density < density_b.x) {
     len *= 2;
-    if (len <= edges.N) {
+    if (len <= static_cast<int>(edges.N)) {
       level--;
       node_index = find_node(node_index, len);
       density_b = density_bound(&edges, level);
@@ -795,7 +802,7 @@ PCSR::PCSR(uint32_t init_n, uint32_t src_n, bool lock_search, int domain)
 
   double index_d = 0.0;
   const double step = ((double)edges.N) / src_n;
-  int in = 0;
+  uint64_t in = 0;
 
   for (uint32_t i = 0; i < src_n; i++) {
     if (i == 0) {
@@ -804,7 +811,7 @@ PCSR::PCSR(uint32_t init_n, uint32_t src_n, bool lock_search, int domain)
       nodes[i].beginning = nodes[i - 1].end;
     }
     index_d += step;
-    in = static_cast<int>(index_d);
+    in = static_cast<uint64_t>(index_d);
     nodes[i].end = in;
     nodes[i].num_neighbors = 0;
   }
@@ -814,10 +821,10 @@ PCSR::PCSR(uint32_t init_n, uint32_t src_n, bool lock_search, int domain)
 
   index_d = 0.0;
   in = 0;
-  int current = 0;
+  uint32_t current = 0;
 
   // evenly distribute for a uniform density
-  for (int i = 0; i < edges.N; i++) {
+  for (uint64_t i = 0; i < edges.N; i++) {
     if (i == in && current < src_n) {
       edges.items[i].src = current;
       edges.items[i].dest = UINT32_MAX;  // placeholder
@@ -872,9 +879,9 @@ bool PCSR::edge_exists(uint32_t src, uint32_t dest) {
 // Returns true if every neighbourhood is sorted
 // Added by Eleni Alevra
 bool PCSR::is_sorted() const {
-  for (int i = 0; i < nodes.size(); i++) {
-    int prev = 0;
-    for (int j = nodes[i].beginning + 1; j < nodes[i].end; j++) {
+  for (size_t i = 0; i < nodes.size(); i++) {
+    uint32_t prev = 0;
+    for (uint32_t j = nodes[i].beginning + 1; j < nodes[i].end; j++) {
       if (!is_null(edges.items[j].value)) {
         if (edges.items[j].dest < prev) {
           cout << prev << " " << i << " " << edges.items[j].dest << endl;
@@ -889,20 +896,24 @@ bool PCSR::is_sorted() const {
 
 // Reads the neighbourhood of vertex src
 // Added by Eleni Alevra
-void PCSR::read_neighbourhood(int src) {
+//
+// TODO: How does this function read the neighbourhood? There is no output so
+// the compiler will remove all code...
+void PCSR::read_neighbourhood(uint32_t src) {
   if (src < get_n()) {
-    int k = 0;
-    for (int i = nodes[src].beginning + 1; i < nodes[src].end; i++) {
+    uint32_t k = 0;
+    for (uint32_t i = nodes[src].beginning + 1; i < nodes[src].end; i++) {
       k = edges.items[i].dest;
     }
+    (void)k;
   }
 }
 
-vector<int> PCSR::get_neighbourhood(int src) const {
-  std::vector<int> neighbours;
+std::vector<uint32_t> PCSR::get_neighbourhood(uint32_t src) const {
+  std::vector<uint32_t> neighbours;
   if (src < get_n()) {
     neighbours.reserve(nodes[src].num_neighbors);
-    for (int i = nodes[src].beginning + 1; i < nodes[src].end; i++) {
+    for (uint32_t i = nodes[src].beginning + 1; i < nodes[src].end; i++) {
       if (edges.items[i].value != 0) {
         neighbours.push_back(edges.items[i].dest);
       }
@@ -960,9 +971,9 @@ pair<pair<int, int>, insertion_info_t *> PCSR::acquire_insert_locks(uint32_t ind
   uint32_t min_node = get_node_id(node_index);
   uint32_t max_node = min_node;
   uint32_t node_id = get_node_id(node_index);
-  if (left_node_bound != -1) {
+  if (left_node_bound != std::numeric_limits<uint32_t>::max()) {
     uint32_t leftmost_node = left_node_bound;
-    for (int i = leftmost_node; i <= node_id; i++) {
+    for (uint32_t i = leftmost_node; i <= node_id; i++) {
       edges.node_locks[i]->lock();
     }
     //    if (node_id < (edges.N / edges.logN) - 1) {
@@ -984,13 +995,13 @@ pair<pair<int, int>, insertion_info_t *> PCSR::acquire_insert_locks(uint32_t ind
     //    }
   }
   if (ins_node_v != edges.node_locks[node_id]->load()) {
-    for (int i = min_node; i <= max_node; i++) {
+    for (uint32_t i = min_node; i <= max_node; i++) {
       edges.node_locks[i]->unlock();
     }
     return make_pair(make_pair(NEED_RETRY, NEED_RETRY), nullptr);
   }
   if (index == edges.N - 1 && !(is_null(edges.items[index].value))) {
-    for (int i = min_node; i <= max_node; i++) {
+    for (uint32_t i = min_node; i <= max_node; i++) {
       edges.node_locks[i]->unlock();
     }
     return make_pair(make_pair(NEED_GLOBAL_WRITE, NEED_GLOBAL_WRITE), nullptr);
@@ -1000,7 +1011,7 @@ pair<pair<int, int>, insertion_info_t *> PCSR::acquire_insert_locks(uint32_t ind
     // re-try
     auto ins_edge = edges.items[index];
     if (!got_correct_insertion_index(ins_edge, src, index, elem, node_index, node_id, max_node)) {
-      for (int i = min_node; i <= max_node; i++) {
+      for (uint32_t i = min_node; i <= max_node; i++) {
         edges.node_locks[i]->unlock();
       }
       return make_pair(make_pair(NEED_RETRY, NEED_RETRY), nullptr);
@@ -1050,7 +1061,7 @@ pair<pair<int, int>, insertion_info_t *> PCSR::acquire_insert_locks(uint32_t ind
       density_b = density_bound(&edges, level);
       density = get_density(&edges, node_index, len) + (1.0 / len);
     } else {
-      for (int i = min_node; i <= max_node; i++) {
+      for (uint32_t i = min_node; i <= max_node; i++) {
         edges.node_locks[i]->unlock();
       }
       insertion_info_t *info = (insertion_info_t *)malloc(sizeof(insertion_info_t));
@@ -1123,7 +1134,7 @@ pair<pair<int, int>, insertion_info_t *> PCSR::acquire_insert_locks(uint32_t ind
         }
       }
       if (curr_ind == -1) {
-        for (auto i = min_node; i <= max_node; i++) {
+        for (uint32_t i = min_node; i <= max_node; i++) {
           edges.node_locks[i]->unlock();
         }
         return make_pair(make_pair(NEED_GLOBAL_WRITE, NEED_GLOBAL_WRITE), nullptr);
