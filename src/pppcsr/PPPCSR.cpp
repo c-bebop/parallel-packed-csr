@@ -13,7 +13,8 @@
 
 PPPCSR::PPPCSR(uint32_t init_n, uint32_t src_n, bool lock_search, int numDomain, int partitionsPerDomain, bool use_numa)
     : partitionsPerDomain(partitionsPerDomain) {
-  std::size_t numDomains = numDomain;
+  size_t numDomains = numDomain;
+  (void)src_n;  // TODO: unused parameter, remove!
 
   partitions.reserve(numDomains * partitionsPerDomain);
   distribution.reserve(numDomains * partitionsPerDomain);
