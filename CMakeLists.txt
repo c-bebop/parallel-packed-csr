@@ -36,7 +36,6 @@ target_include_directories(parallel-packed-csr PRIVATE ${parallel-packed-csr_INC
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
-find_package(numa)
 target_link_libraries(parallel-packed-csr PRIVATE Threads::Threads numa)
 
 list(REMOVE_ITEM parallel-packed-csr_SOURCES ${PROJECT_SOURCE_DIR}/main.cpp)
