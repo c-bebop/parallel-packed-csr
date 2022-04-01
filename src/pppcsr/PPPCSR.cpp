@@ -21,8 +21,8 @@ PPPCSR::PPPCSR(uint32_t init_n, uint32_t src_n, bool lock_search, int numDomain,
   distribution.push_back(0);
   size_t partitionSize = std::ceil(init_n / (numDomains * partitionsPerDomain));
 
-  for (std::size_t i = 0; i < numDomains; i++) {
-    for (std::size_t p = 0; p < partitionsPerDomain; p++) {
+  for (size_t i = 0; i < numDomains; i++) {
+    for (int p = 0; p < partitionsPerDomain; p++) {
       if (i > 0 || p > 0) {
         distribution.push_back(distribution.back() + partitionSize);
       }
@@ -69,7 +69,7 @@ std::size_t PPPCSR::get_partiton(size_t vertex_id) const {
 
 uint64_t PPPCSR::get_n() {
   uint64_t n = 0;
-  for (int i = 0; i < partitions.size(); i++) {
+  for (size_t i = 0; i < partitions.size(); i++) {
     n += partitions[i].get_n();
   }
   return n;
