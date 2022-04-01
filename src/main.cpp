@@ -21,12 +21,10 @@
 #include "thread_pool/thread_pool.h"
 #include "thread_pool_pppcsr/thread_pool_pppcsr.h"
 
-using namespace std;
-
 enum class Operation { READ, ADD, DELETE };
 
 // Reads edge list with separator
-pair<vector<tuple<Operation, int, int>>, int> read_input(string filename, Operation defaultOp) {
+std::pair<std::vector<std::tuple<Operation, int, int>>, int> read_input(string filename, Operation defaultOp) {
   ifstream f;
   string line;
   f.open(filename);
@@ -34,7 +32,7 @@ pair<vector<tuple<Operation, int, int>>, int> read_input(string filename, Operat
     std::cerr << "Invalid file" << std::endl;
     exit(EXIT_FAILURE);
   }
-  vector<tuple<Operation, int, int>> edges;
+  std::vector<std::tuple<Operation, int, int>> edges;
   int num_nodes = 0;
   std::size_t pos, pos2;
   while (getline(f, line)) {
@@ -63,8 +61,8 @@ pair<vector<tuple<Operation, int, int>>, int> read_input(string filename, Operat
 
 // Does insertions
 template <typename ThreadPool_t>
-void update_existing_graph(const vector<tuple<Operation, int, int>> &input, ThreadPool_t *thread_pool, int threads,
-                           int size) {
+void update_existing_graph(const std::vector<std::tuple<Operation, int, int>> &input, ThreadPool_t *thread_pool,
+                           int threads, int size) {
   for (int i = 0; i < size; i++) {
     switch (get<0>(input[i])) {
       case Operation::ADD:
@@ -83,8 +81,8 @@ void update_existing_graph(const vector<tuple<Operation, int, int>> &input, Thre
 }
 
 template <typename ThreadPool_t>
-void execute(int threads, int size, const vector<tuple<Operation, int, int>> &core_graph,
-             const vector<tuple<Operation, int, int>> &updates, std::unique_ptr<ThreadPool_t> &thread_pool) {
+void execute(int threads, int size, const std::vector<std::tuple<Operation, int, int>> &core_graph,
+             const std::vector<std::tuple<Operation, int, int>> &updates, std::unique_ptr<ThreadPool_t> &thread_pool) {
   // Load core graph
   update_existing_graph(core_graph, thread_pool.get(), threads, core_graph.size());
   // Do updates
@@ -116,8 +114,8 @@ int main(int argc, char *argv[]) {
   bool insert = true;
   Version v = Version::PPPCSRNUMA;
   int partitions_per_domain = 1;
-  vector<tuple<Operation, int, int>> core_graph;
-  vector<tuple<Operation, int, int>> updates;
+  std::vector<std::tuple<Operation, int, int>> core_graph;
+  std::vector<std::tuple<Operation, int, int>> updates;
   for (int i = 1; i < argc; i++) {
     string s = string(argv[i]);
     if (s.rfind("-threads=", 0) == 0) {
