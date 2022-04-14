@@ -57,7 +57,7 @@ void checkAllocation(T *ptr) {
 // same as find_leaf, but does it for any level in the tree
 // index: index in array
 // len: length of sub-level.
-int find_node(int index, int len) { return (index / len) * len; }
+uint32_t find_node(uint32_t index, uint32_t len) { return (index / len) * len; }
 
 // null overrides sentinel
 // e.g. in rebalance, we check if an edge is null
@@ -964,10 +964,11 @@ pair<pair<int, int>, insertion_info_t *> PCSR::acquire_insert_locks(uint32_t ind
     // very rarely happens (about 100 times in 14M insertions)
     return make_pair(make_pair(NEED_GLOBAL_WRITE, NEED_GLOBAL_WRITE), nullptr);
   }
-  int node_index = find_leaf(&edges, index);
-  int init_node_index = node_index;
+  uint32_t node_index = find_leaf(&edges, index);
+  // TODO: remove unused var
+  // uint32_t init_node_index = node_index;
   int level = edges.H;
-  int len = edges.logN;
+  uint32_t len = edges.logN;
   uint32_t min_node = get_node_id(node_index);
   uint32_t max_node = min_node;
   uint32_t node_id = get_node_id(node_index);
@@ -1098,7 +1099,7 @@ pair<pair<int, int>, insertion_info_t *> PCSR::acquire_insert_locks(uint32_t ind
 
   if (!(is_null(edges.items[index].value))) {
     auto curr_node = get_node_id(node_index);
-    int curr_ind = index + 1;
+    uint32_t curr_ind = index + 1;
     uint32_t curr_node_idx = node_index;
     if (curr_ind < edges.N && curr_ind >= curr_node_idx + len) {
       curr_node_idx = curr_ind;
@@ -1122,8 +1123,8 @@ pair<pair<int, int>, insertion_info_t *> PCSR::acquire_insert_locks(uint32_t ind
       curr_ind = index;
       curr_node = get_node_id(node_index);
       curr_node_idx = node_index;
-      while (curr_ind >= 0 && !(is_null(edges.items[curr_ind].value))) {
-        if (--curr_ind >= 0 && curr_ind < curr_node_idx) {
+      while (curr_ind != std::numeric_limits<uint32_t>::max() && !(is_null(edges.items[curr_ind].value))) {
+        if (--curr_ind >= std::numeric_limits<uint32_t>::max() && curr_ind < curr_node_idx) {
           curr_node_idx = find_leaf(&edges, curr_ind);
           curr_node--;
           if (curr_node < min_node) {
@@ -1133,7 +1134,7 @@ pair<pair<int, int>, insertion_info_t *> PCSR::acquire_insert_locks(uint32_t ind
           }
         }
       }
-      if (curr_ind == -1) {
+      if (curr_ind == std::numeric_limits<uint32_t>::max()) {
         for (uint32_t i = min_node; i <= max_node; i++) {
           edges.node_locks[i]->unlock();
         }
@@ -1157,16 +1158,16 @@ pair<pair<int, int>, insertion_info_t *> PCSR::acquire_insert_locks(uint32_t ind
 // Added by Eleni Alevra
 pair<int, int> PCSR::acquire_remove_locks(uint32_t index, edge_t elem, uint32_t src, int ins_node_v,
                                           uint32_t left_node_bound) {
-  int node_index = find_leaf(&edges, index);
+  uint32_t node_index = find_leaf(&edges, index);
   // printf("node_index = %d\n", node_index);
-  int level = edges.H;
-  int len = edges.logN;
-  int node_id = get_node_id(node_index);
+  uint32_t level = edges.H;
+  uint32_t len = edges.logN;
+  uint32_t node_id = get_node_id(node_index);
   uint32_t min_node = node_id;
   uint32_t max_node = node_id;
 
   // If we have a leftmost PCSR start locking from it
-  if (left_node_bound != -1) {
+  if (left_node_bound != std::numeric_limits<uint32_t>::max()) {
     for (uint32_t i = left_node_bound; i <= node_id; i++) {
       edges.node_locks[i]->lock();
       //      got_locks++;
@@ -1210,7 +1211,7 @@ pair<int, int> PCSR::acquire_remove_locks(uint32_t index, edge_t elem, uint32_t 
     if (len <= edges.N) {
       level--;
       uint32_t new_node_idx = find_node(node_index, len);
-      int new_node_id = get_node_id(new_node_idx);
+      uint32_t new_node_id = get_node_id(new_node_idx);
       if (new_node_idx < node_index && new_node_id < min_node) {
         release_locks_no_inc(make_pair(min_node, max_node));
         return acquire_remove_locks(index, elem, src, ins_node_v, new_node_id);
@@ -1320,6 +1321,7 @@ int PCSR::count_elems(int index, int len) {
 // Added by Eleni Alevra
 bool PCSR::got_correct_insertion_index(edge_t ins_edge, uint32_t src, uint32_t index, edge_t elem, int node_index,
                                        int node_id, uint32_t &max_node) {
+  (void)node_id;  // TODO: remove unused parameter
   // Check that we are in the right neighbourhood
   if (!(is_null(ins_edge.value)) &&
       ((is_sentinel(ins_edge) && src != nodes.size() - 1 && ins_edge.src != src + 1) ||
@@ -1334,8 +1336,8 @@ bool PCSR::got_correct_insertion_index(edge_t ins_edge, uint32_t src, uint32_t i
   if (is_null(ins_edge.value)) {
     // The current position is empty so we need to find the next element to the right to make sure it's bigger than the
     // one we want to insert
-    int ind = index + 1;
-    auto curr_n = node_index;
+    uint32_t ind = index + 1;
+    uint32_t curr_n = node_index;
     if (ind < edges.N && ind >= curr_n + edges.logN) {
       curr_n += edges.logN;
       edges.node_locks[++max_node]->lock();
@@ -1363,12 +1365,12 @@ bool PCSR::got_correct_insertion_index(edge_t ins_edge, uint32_t src, uint32_t i
     }
   }
   // Go to the left to find the next element to the left and make sure it's less than the one we are inserting
-  auto ind = index - 1;
+  uint32_t ind = index - 1;
   edge_t item;
   item.value = 0;
   item.dest = 0;
   item.src = -1;
-  while (ind >= 0 && is_null(edges.items[ind].value)) {
+  while (ind != std::numeric_limits<uint32_t>::max() && is_null(edges.items[ind].value)) {
     ind--;
   }
   item = edges.items[ind];
@@ -1376,7 +1378,7 @@ bool PCSR::got_correct_insertion_index(edge_t ins_edge, uint32_t src, uint32_t i
     return false;
   }
   if (!is_null(item.value) && is_sentinel(item) &&
-      ((src == 0 && item.value != UINT32_MAX) || (src != 0 && item.value != src))) {
+      ((src == 0 && item.value != UINT32_MAX) || (src != 0u && item.value != src))) {
     return false;
   }
   return true;
