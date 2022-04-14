@@ -80,7 +80,7 @@ TEST_P(DataStructureTest, add_remove_edge_1E4_seq) {
 
 TEST_P(DataStructureTest, add_remove_edge_1E5_par) {
   PCSR pcsr(10, 10, GetParam(), 0);
-  constexpr int edge_count = 1E5;
+  constexpr uint32_t edge_count = 100000;
 #pragma omp parallel
   {
     pcsr.edges.global_lock->registerThread();
