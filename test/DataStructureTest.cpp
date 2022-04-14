@@ -85,8 +85,8 @@ TEST_P(DataStructureTest, add_remove_edge_1E5_par) {
   {
     pcsr.edges.global_lock->registerThread();
 #pragma omp for nowait
-    for (int i = 1; i < edge_count + 1; ++i) {
-      pcsr.add_edge(0, i, i);
+    for (uint32_t i = 1; i <= edge_count; ++i) {
+      pcsr.add_edge(0, i, 1u);
       EXPECT_TRUE(pcsr.edge_exists(0, i)) << i;
     }
     pcsr.edges.global_lock->unregisterThread();
@@ -104,7 +104,7 @@ TEST_P(DataStructureTest, add_remove_edge_1E5_par) {
   {
     pcsr.edges.global_lock->registerThread();
 #pragma omp for nowait
-    for (int i = 1; i < edge_count + 1; ++i) {
+    for (uint32_t i = 1; i <= edge_count; ++i) {
       pcsr.remove_edge(0, i);
       EXPECT_FALSE(pcsr.edge_exists(0, i)) << i;
     }
